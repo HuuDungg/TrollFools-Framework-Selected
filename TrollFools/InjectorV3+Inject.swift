@@ -237,7 +237,7 @@ extension InjectorV3 {
         return executableURL
     }
 
-    fileprivate static func findResource(_ name: String, fileExtension: String) -> URL {
+    static func findResource(_ name: String, fileExtension: String) -> URL {
         if let url = Bundle.main.url(forResource: name, withExtension: fileExtension) {
             return url
         }
