@@ -73,22 +73,40 @@ extension InjectorV3 {
         guard let targetMachO = try locateAvailableMachO() else {
             DDLogError("All Mach-Os are protected", ddlog: logger)
 
-            throw Error.generic(NSLocalizedString("No eligible framework found.\n\nIt is usually not a bug with TrollFools itself, but rather with the target app. You may re-install that from App Store. You can’t use TrollFools with apps installed via “Asspp” or tweaks like “NoAppThinning”.", comment: ""))
+            throw Error.generic(NSLocalizedString("No eligible framework found.\n\nIt is usually not a bug with TrollFools itself, but rather with the target app. You may re-install that from App Store. You can't use TrollFools with apps installed via “Asspp” or tweaks like “NoAppThinning”.", comment: ""))
         }
 
         DDLogInfo("Best matched Mach-O is \(targetMachO.path)", ddlog: logger)
 
-        let resourceURLs: [URL] = [substrateFwkURL] + assetURLs
+        // Create dummy framework as hub for all tweaks
+        let dummyFwkURL = try prepareDummyFramework()
+        let dummyMachO = dummyFwkURL.appendingPathComponent(Self.dummyFwkExecutableName)
+
+        // Insert tweak load commands into dummy framework (not into target Mach-O)
+        try cmdInsertLoadCommandRuntimePath(dummyMachO, name: "@executable_path/Frameworks")
+        for assetURL in assetURLs {
+            try insertLoadCommandOfAsset(assetURL, to: dummyMachO)
+        }
+        // Also make dummy load CydiaSubstrate
+        try cmdInsertLoadCommandDylib(
+            dummyMachO,
+            name: "@rpath/\(Self.substrateFwkName)/\(Self.substrateName)",
+            weak: false
+        )
+        try applyCoreTrustBypass(dummyFwkURL)
+
+        DDLogInfo("Dummy framework prepared with \(assetURLs.count) tweak(s)", ddlog: logger)
+
+        // Insert only dummy framework load command into target Mach-O
+        let allResources: [URL] = [substrateFwkURL, dummyFwkURL] + assetURLs
         try makeAlternate(targetMachO)
         do {
-            try copyfiles(resourceURLs)
-            for assetURL in assetURLs {
-                try insertLoadCommandOfAsset(assetURL, to: targetMachO)
-            }
+            try copyfiles(allResources)
+            try insertLoadCommandOfAsset(dummyFwkURL, to: targetMachO)
             try applyCoreTrustBypass(targetMachO)
         } catch {
             try? restoreAlternate(targetMachO)
-            try? batchRemove(resourceURLs)
+            try? batchRemove(allResources)
             throw error
         }
     }
@@ -205,8 +223,18 @@ extension InjectorV3 {
     // MARK: - Path Finder
 
     fileprivate func locateAvailableMachO() throws -> URL? {
-        try frameworkMachOsInBundle(bundleURL)
-            .first { try !isProtectedMachO($0) }
+        // Try to find an unencrypted framework Mach-O first (preferred)
+        if let unprotected = try frameworkMachOsInBundle(bundleURL)
+            .first(where: { try !isProtectedMachO($0) })
+        {
+            return unprotected
+        }
+
+        // Fallback: try main executable even if encrypted.
+        // insert_dylib only modifies the Mach-O header (which is NOT encrypted),
+        // so it can still insert load commands. ct_bypass re-signs the binary.
+        DDLogWarn("All framework Mach-Os are protected, falling back to main executable", ddlog: logger)
+        return executableURL
     }
 
     fileprivate static func findResource(_ name: String, fileExtension: String) -> URL {

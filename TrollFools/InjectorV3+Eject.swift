@@ -65,6 +65,10 @@ extension InjectorV3 {
             return
         }
 
+        // Check if dummy framework exists (new injection method)
+        let dummyFwkInstalledURL = frameworksDirectoryURL.appendingPathComponent(Self.dummyFwkName, isDirectory: true)
+        let hasDummyFramework = FileManager.default.fileExists(atPath: dummyFwkInstalledURL.path)
+
         let targetURLs = try collectModifiedMachOs()
         guard !targetURLs.isEmpty else {
             DDLogError("Unable to find any modified Mach-Os", ddlog: logger)
@@ -73,23 +77,57 @@ extension InjectorV3 {
 
         DDLogInfo("Modified Mach-Os \(targetURLs.map { $0.path })", ddlog: logger)
 
-        for assetURL in assetURLs {
-            try targetURLs.forEach {
-                try removeLoadCommandOfAsset(assetURL, from: $0)
+        if hasDummyFramework {
+            // New dummy framework approach:
+            // Tweak load commands are inside the dummy framework, not the target Mach-O.
+            // Remove tweak load commands from dummy framework first.
+            let dummyMachO = dummyFwkInstalledURL.appendingPathComponent(Self.dummyFwkExecutableName)
+            for assetURL in assetURLs {
+                try? removeLoadCommandOfAsset(assetURL, from: dummyMachO)
             }
-            try? cmdRemove(assetURL, recursively: checkIsDirectory(assetURL))
-        }
 
-        try targetURLs.forEach {
-            try cmdCoreTrustBypass($0, teamID: teamID)
-            try cmdChangeOwnerToInstalld($0)
-        }
+            // Remove the tweak files
+            for assetURL in assetURLs {
+                try? cmdRemove(assetURL, recursively: checkIsDirectory(assetURL))
+            }
 
-        if !hasInjectedAsset {
-            try targetURLs.forEach { try restoreAlternate($0) }
+            // If no more injected assets remain, clean up dummy framework + substrate
+            if !hasInjectedAsset {
+                // Remove dummy framework load command from target Mach-Os
+                for targetURL in targetURLs {
+                    try? cmdRemoveLoadCommandDylib(targetURL, name: Self.dummyFwkInstallName)
+                    try cmdCoreTrustBypass(targetURL, teamID: teamID)
+                    try cmdChangeOwnerToInstalld(targetURL)
+                }
 
-            let substrateFwkURL = bundleURL.appendingPathComponent("Frameworks/\(Self.substrateFwkName)", isDirectory: true)
-            try? cmdRemove(substrateFwkURL, recursively: true)
+                // Restore original Mach-Os
+                try targetURLs.forEach { try restoreAlternate($0) }
+
+                // Remove dummy framework and substrate
+                try? cmdRemove(dummyFwkInstalledURL, recursively: true)
+                let substrateFwkURL = bundleURL.appendingPathComponent("Frameworks/\(Self.substrateFwkName)", isDirectory: true)
+                try? cmdRemove(substrateFwkURL, recursively: true)
+            }
+        } else {
+            // Legacy eject path (for apps injected with the old method)
+            for assetURL in assetURLs {
+                try targetURLs.forEach {
+                    try removeLoadCommandOfAsset(assetURL, from: $0)
+                }
+                try? cmdRemove(assetURL, recursively: checkIsDirectory(assetURL))
+            }
+
+            try targetURLs.forEach {
+                try cmdCoreTrustBypass($0, teamID: teamID)
+                try cmdChangeOwnerToInstalld($0)
+            }
+
+            if !hasInjectedAsset {
+                try targetURLs.forEach { try restoreAlternate($0) }
+
+                let substrateFwkURL = bundleURL.appendingPathComponent("Frameworks/\(Self.substrateFwkName)", isDirectory: true)
+                try? cmdRemove(substrateFwkURL, recursively: true)
+            }
         }
     }
 

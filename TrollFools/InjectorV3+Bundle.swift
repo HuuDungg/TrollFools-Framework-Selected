@@ -20,6 +20,8 @@ extension InjectorV3 {
         "libsubstrate.dylib",
         "libsubstitute.dylib",
         "libellekit.dylib",
+        "trollfoolsdummy",
+        "trollfoolsdummy.framework",
     ]
 
     static let substrateName = "CydiaSubstrate"
