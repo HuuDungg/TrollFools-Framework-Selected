@@ -26,12 +26,26 @@ extension InjectorV3 {
 
         try FileManager.default.createDirectory(at: fwkURL, withIntermediateDirectories: true)
 
-        // Generate minimal Mach-O dylib
-        let machOData = MachOBuilder.buildFATDylib(installName: Self.dummyFwkInstallName)
+        // Generate minimal Mach-O dylib by using CydiaSubstrate as a template
+        let substrateZipURL = Self.findResource(Self.substrateFwkName, fileExtension: "zip")
+        let tempExtractURL = temporaryDirectoryURL.appendingPathComponent("SubstrateTempExtraction_\(UUID().uuidString)")
+        
+        try FileManager.default.createDirectory(at: tempExtractURL, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: tempExtractURL) }
+        
+        try FileManager.default.unzipItem(at: substrateZipURL, to: tempExtractURL)
+        
+        let substrateFwkURL = tempExtractURL.appendingPathComponent(Self.substrateFwkName)
+        let substrateMachOURL = substrateFwkURL.appendingPathComponent(Self.substrateName)
+        
+        // Copy the Substrate binary as our dummy executable
         let machOURL = fwkURL.appendingPathComponent(Self.dummyFwkExecutableName)
-        try machOData.write(to: machOURL)
+        try cmdCopy(from: substrateMachOURL, to: machOURL)
+        
+        // Change its install name (LC_ID_DYLIB) so dyld knows its identity
+        try cmdChangeInstallName(machOURL, name: Self.dummyFwkInstallName)
 
-        DDLogInfo("Created dummy Mach-O at \(machOURL.path) (\(machOData.count) bytes)", ddlog: logger)
+        DDLogInfo("Created dummy Mach-O at \(machOURL.path)", ddlog: logger)
 
         // Create Info.plist
         let infoPlist: [String: Any] = [

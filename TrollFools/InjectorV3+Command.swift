@@ -295,6 +295,16 @@ extension InjectorV3 {
 
     fileprivate static let installNameToolBinaryURL = findExecutable("install_name_tool")
 
+    func cmdChangeInstallName(_ target: URL, name: String) throws {
+        try cmdPseudoSign(target, force: true)
+        let retCode = try Execute.rootSpawn(binary: Self.installNameToolBinaryURL.path, arguments: [
+            "-id", name, target.path,
+        ], ddlog: logger)
+        guard case let .exit(code) = retCode, code == EXIT_SUCCESS else {
+            try throwCommandFailure("install_name_tool", reason: retCode)
+        }
+    }
+
     func cmdInsertLoadCommandRuntimePath(_ target: URL, name: String) throws {
         let rpaths = try runtimePathsOfMachO(target)
         if rpaths.contains(name) {
