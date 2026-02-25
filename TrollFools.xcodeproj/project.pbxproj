@@ -117,8 +117,6 @@
 		CCF5A0A62C4D45400097D48D /* AuxiliaryExecute+Spawn.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCF5A0A52C4D45400097D48D /* AuxiliaryExecute+Spawn.swift */; };
 		CCF925442C4CE47800880D48 /* chown in Resources */ = {isa = PBXBuildFile; fileRef = CCF925432C4CE47800880D48 /* chown */; };
 		CCFC78642C4E853D008EB25D /* mkdir in Resources */ = {isa = PBXBuildFile; fileRef = CCFC78632C4E853D008EB25D /* mkdir */; };
-			F347E17026054940A138C77C /* MachOBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE3FB24818749959699B39D /* MachOBuilder.swift */; };
-			ECA5C988D42B462A9182CB2E /* MachOBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = FAE3FB24818749959699B39D /* MachOBuilder.swift */; };
 			833B469201144C2C9ED15D45 /* DummyFrameworkBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 444CEAD76E6F42A1978C6F4D /* DummyFrameworkBuilder.swift */; };
 			76DA712AC15D4B54A0655725 /* DummyFrameworkBuilder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 444CEAD76E6F42A1978C6F4D /* DummyFrameworkBuilder.swift */; };
 /* End PBXBuildFile section */
@@ -234,7 +232,6 @@
 		CCF925422C4C1B6F00880D48 /* LSApplicationProxy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LSApplicationProxy.h; sourceTree = "<group>"; };
 		CCF925432C4CE47800880D48 /* chown */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = chown; sourceTree = "<group>"; };
 		CCFC78632C4E853D008EB25D /* mkdir */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.executable"; path = mkdir; sourceTree = "<group>"; };
-			FAE3FB24818749959699B39D /* MachOBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MachOBuilder.swift"; sourceTree = "<group>"; };
 			444CEAD76E6F42A1978C6F4D /* DummyFrameworkBuilder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "DummyFrameworkBuilder.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -337,7 +334,6 @@
 				61EFA3632D30267200159442 /* InjectorV3.swift */,
 				61EFA37A2D31165000159442 /* InjectorV3+Backup.swift */,
 						444CEAD76E6F42A1978C6F4D /* DummyFrameworkBuilder.swift */,
-						FAE3FB24818749959699B39D /* MachOBuilder.swift */,
 				61EFA36E2D30338300159442 /* InjectorV3+Bundle.swift */,
 				61EFA36C2D3027AF00159442 /* InjectorV3+Command.swift */,
 				61EFA3782D3108B700159442 /* InjectorV3+Eject.swift */,
@@ -645,7 +641,6 @@
 				614C0C632D7C2EDE007E9184 /* TrollFoolsStub.m in Sources */,
 				614C0C5A2D7C2E98007E9184 /* InjectorV3+Backup.swift in Sources */,
 						833B469201144C2C9ED15D45 /* DummyFrameworkBuilder.swift in Sources */,
-						F347E17026054940A138C77C /* MachOBuilder.swift in Sources */,
 				614C0C5B2D7C2E98007E9184 /* InjectorV3+Command.swift in Sources */,
 				614C0C5C2D7C2E98007E9184 /* InjectorV3+Bundle.swift in Sources */,
 				CC8A36752D7EB92800BE90D3 /* CmdView.swift in Sources */,
@@ -694,7 +689,6 @@
 				6124A07F2CD233BA00C52253 /* PlugInCell.swift in Sources */,
 				61EFA37B2D31165700159442 /* InjectorV3+Backup.swift in Sources */,
 						76DA712AC15D4B54A0655725 /* DummyFrameworkBuilder.swift in Sources */,
-						ECA5C988D42B462A9182CB2E /* MachOBuilder.swift in Sources */,
 				61EFA3712D3033BB00159442 /* InjectorV3+Error.swift in Sources */,
 				6124A06F2CD2324200C52253 /* AppListModel.swift in Sources */,
 				CCB6A1192C4A58C7000D75B0 /* OptionView.swift in Sources */,
